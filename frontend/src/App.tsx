@@ -40,6 +40,9 @@ export default function App() {
 
   useEffect(() => { tracksRef.current = tracks }, [tracks])
   useEffect(() => { positionRef.current = position }, [position])
+  useEffect(() => {
+    if (positionRef.current > total) { positionRef.current = total; setPosition(total) }
+  }, [total])
   useEffect(() => { setSaved(true) }, [])
   const getAudioContext = useCallback(async () => {
     if (!audioContext.current) audioContext.current = new AudioContext()
@@ -95,11 +98,11 @@ export default function App() {
   }, [])
   useEffect(() => {
     if (!playback.current.active || !audioContext.current) return
-    const current = playback.current.offset + audioContext.current.currentTime - playback.current.startAt
+    const current = Math.min(total, playback.current.offset + audioContext.current.currentTime - playback.current.startAt)
     positionRef.current = current
     setPosition(current)
     stopPlayback()
-  }, [tracks, stopPlayback])
+  }, [tracks, total, stopPlayback])
   const schedule = useCallback((from: number, context: AudioContext) => {
     const now = context.currentTime, currentTracks = tracksRef.current, hasSolo = currentTracks.some(track => track.solo)
     currentTracks.forEach(track => {
