@@ -29,6 +29,7 @@ export default function App() {
   const [busyExport, setBusyExport] = useState(false)
   const audioContext = useRef<AudioContext | null>(null)
   const playback = useRef({ active: false, offset: 0, startAt: 0, raf: 0 })
+  const scheduledSources = useRef(new Set<AudioBufferSourceNode>())
   const tracksRef = useRef(tracks)
   const positionRef = useRef(position)
   const { history, commit, undo, redo, canUndo: undoAvailable, canRedo: redoAvailable, reset: resetHistory } = useTrackHistory(tracksRef, setTracks, setSaved)
@@ -89,8 +90,16 @@ export default function App() {
   const addTrack = () => { commit([...cloneTracks(tracksRef.current), blankTrack(`Track ${tracksRef.current.length + 1}`, tracksRef.current.length)]) }
   const stopPlayback = useCallback(() => {
     playback.current.active = false; cancelAnimationFrame(playback.current.raf); setPlaying(false)
-    audioContext.current?.suspend().catch(() => undefined)
+    scheduledSources.current.forEach(source => { try { source.stop() } catch { /* Source already ended. */ } })
+    scheduledSources.current.clear()
   }, [])
+  useEffect(() => {
+    if (!playback.current.active || !audioContext.current) return
+    const current = playback.current.offset + audioContext.current.currentTime - playback.current.startAt
+    positionRef.current = current
+    setPosition(current)
+    stopPlayback()
+  }, [tracks, stopPlayback])
   const schedule = useCallback((from: number, context: AudioContext) => {
     const now = context.currentTime, currentTracks = tracksRef.current, hasSolo = currentTracks.some(track => track.solo)
     currentTracks.forEach(track => {
@@ -110,12 +119,15 @@ export default function App() {
           if (duration > clip.fadeOut) gain.gain.setValueAtTime(track.volume, when + duration - clip.fadeOut)
           gain.gain.linearRampToValueAtTime(0, when + duration)
         }
-        source.connect(gain).connect(pan).connect(context.destination); source.start(when, clip.offset + delta, duration)
+        source.connect(gain).connect(pan).connect(context.destination)
+        source.onended = () => scheduledSources.current.delete(source)
+        scheduledSources.current.add(source)
+        source.start(when, clip.offset + delta, duration)
       })
     })
   }, [assets])
   const play = async () => {
-    if (playing) { const current = playback.current.offset + (audioContext.current!.currentTime - playback.current.startAt); setPosition(current); stopPlayback(); return }
+    if (playback.current.active) { const current = playback.current.offset + (audioContext.current!.currentTime - playback.current.startAt); positionRef.current = current; setPosition(current); stopPlayback(); return }
     if (!total) { showToast('Import audio to start playback'); return }
     const context = await getAudioContext(); playback.current = { active: true, offset: positionRef.current, startAt: context.currentTime, raf: 0 }
     schedule(positionRef.current, context); setPlaying(true)
@@ -132,7 +144,7 @@ export default function App() {
   }
   const seek = (seconds: number) => {
     const next = Math.max(0, Math.min(total, seconds)); setPosition(next)
-    if (playing) { stopPlayback(); window.setTimeout(() => { positionRef.current = next; void play() }, 0) }
+    if (playback.current.active) { stopPlayback(); window.setTimeout(() => { positionRef.current = next; void play() }, 0) }
   }
   const removeClip = () => {
     if (!selected) return
@@ -256,8 +268,6 @@ export default function App() {
         onTrimClip={trimClip}
         onZoomChange={setZoom}
         onSetFade={setFade}
-        onSplitClip={splitClip}
-        onRemoveClip={removeClip}
         onUndo={undo}
         onRedo={redo}
       />
@@ -271,6 +281,8 @@ export default function App() {
         setSaved={setSaved}
         onToggleTrack={(trackId, control) => commit(tracksRef.current.map(track => track.id === trackId ? { ...track, [control]: !track[control] } : track))}
         onSetFade={setFade}
+        onSplitClip={splitClip}
+        onRemoveClip={removeClip}
       />
     </section>
     {toast && <div className="toast">{toast}</div>}
