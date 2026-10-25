@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { API_BASE, api, type AssetMeta, type SavedProject, type Track } from '../api'
-import { blankTrack, cloneTracks, newId, type AudioAsset } from '../editorModel'
+import type { AudioAsset } from '../editorModel'
 
 type ProjectSummary = Pick<SavedProject, 'id' | 'name' | 'updatedAt'>
 
@@ -11,7 +11,6 @@ type ProjectManagerOptions = {
   tracksRef: { current: Track[] }
   assets: AudioAsset[]
   getAudioContext: () => Promise<AudioContext>
-  commit: (tracks: Track[]) => void
   showToast: (message: string) => void
   setAssets: Dispatch<SetStateAction<AudioAsset[]>>
   setProjectId: Dispatch<SetStateAction<string>>
@@ -26,7 +25,7 @@ type ProjectManagerOptions = {
 
 export function useProjectManager(options: ProjectManagerOptions) {
   const {
-    projectId, projectName, tracksRef, assets, getAudioContext, commit, showToast,
+    projectId, projectName, tracksRef, assets, getAudioContext, showToast,
     setAssets, setProjectId, setProjectName, setTracks, setPosition, setSelected,
     setProjectList, setSaved, resetHistory,
   } = options
@@ -62,14 +61,8 @@ export function useProjectManager(options: ProjectManagerOptions) {
     if (!additions.length) return
 
     setAssets(current => [...current, ...additions])
-    const next = cloneTracks(tracksRef.current)
-    if (!next.length) next.push(blankTrack('Track 1', 0))
-    additions.forEach(asset => next[next.length - 1].clips.push({
-      id: newId(), assetId: asset.id, start: 0, duration: asset.buffer.duration, offset: 0, fadeIn: 0, fadeOut: 0,
-    }))
-    commit(next)
-    showToast(additions.length === 1 ? 'Audio added to timeline' : `${additions.length} audio files added`)
-  }, [commit, getAudioContext, loadAsset, setAssets, showToast, tracksRef])
+    showToast(additions.length === 1 ? 'Audio added to media library' : `${additions.length} audio files added to media library`)
+  }, [getAudioContext, loadAsset, setAssets, showToast])
 
   const saveProject = useCallback(async () => {
     try {

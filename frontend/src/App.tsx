@@ -45,7 +45,7 @@ export default function App() {
     return audioContext.current
   }, [])
   const { importFiles, saveProject, openProject, showProjects } = useProjectManager({
-    projectId, projectName, tracksRef, assets, getAudioContext, commit, showToast,
+    projectId, projectName, tracksRef, assets, getAudioContext, showToast,
     setAssets, setProjectId, setProjectName, setTracks, setPosition, setSelected,
     setProjectList, setSaved, resetHistory,
   })
@@ -196,6 +196,17 @@ export default function App() {
     commit(tracksRef.current.map(track => track.id === trackId ? { ...track, clips: [...track.clips, { id: newId(), assetId, start, duration: asset.buffer.duration, offset: 0, fadeIn: 0, fadeOut: 0 }] } : track))
   }
 
+  const assignAsset = (trackId: string, assetId: string) => {
+    const asset = assets.find(item => item.id === assetId)
+    if (!asset) return
+    commit(tracksRef.current.map(track => {
+      if (track.id !== trackId) return track
+      const start = Math.max(0, ...track.clips.map(clip => clip.start + clip.duration))
+      return { ...track, clips: [...track.clips, { id: newId(), assetId, start, duration: asset.buffer.duration, offset: 0, fadeIn: 0, fadeOut: 0 }] }
+    }))
+    setSelected(null)
+  }
+
   const activeTrack = selectedClip?.track ?? tracks[0]
   return <main className="app-shell">
     <TransportBar
@@ -240,6 +251,7 @@ export default function App() {
         onToggleTrack={(trackId, control) => commit(tracksRef.current.map(track => track.id === trackId ? { ...track, [control]: !track[control] } : track))}
         onChangeVolume={(trackId, volume) => { setTracks(current => current.map(track => track.id === trackId ? { ...track, volume } : track)); setSaved(false) }}
         onDropAsset={dropAsset}
+        onAssignAsset={assignAsset}
         onSeek={seek}
         onSelectClip={setSelected}
         onDragClip={dragClip}

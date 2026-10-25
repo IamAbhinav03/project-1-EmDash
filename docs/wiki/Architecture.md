@@ -51,7 +51,7 @@ The browser's `AudioAsset` extends serializable asset metadata with a decoded `A
 1. The Media drawer's file input gives selected `File`s to `useProjectManager.importFiles`.
 2. Each file is posted as multipart form data to `POST /api/assets`. The backend writes it under a generated UUID filename and returns metadata plus `/api/assets/{id}`.
 3. The frontend fetches the asset URL and calls `AudioContext.decodeAudioData`, creating an in-memory `AudioBuffer` for waveform display and audio operations.
-4. Each imported asset is placed as a clip at timeline time zero on the last track (creating a track if needed). The file remains in the media library for later drag-and-drop placement.
+4. Uploaded assets enter the media library. The user chooses a file from a track's selector to add a clip there, or drags it from the media library to a target track and time. The selector appends after the track's last clip.
 5. Save sends project name, tracks, and asset metadata to `PUT /api/projects/{project_id}`. It omits each decoded buffer.
 6. Open fetches project JSON, retrieves each referenced asset, decodes it again, then restores the tracks and project identity.
 

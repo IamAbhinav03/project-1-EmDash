@@ -24,7 +24,7 @@ The timeline width is based on the furthest clip end and zoom (pixels per second
 
 - **Add track:** creates a track with a generated ID, next display name, default volume `0.8`, centered pan, and no mute/solo.
 - **Rename track:** edits the name inline and marks the project unsaved.
-- **Import:** selecting one or more audio files uploads and decodes them. New clips start at zero on the last track. Imported assets can be dragged from the Media drawer onto any track; drop time is derived from pointer position and timeline scroll.
+- **Import:** selecting one or more audio files uploads and decodes them into the Media drawer. Each track has a file selector to add a chosen asset; the new clip starts after that track's last clip, or at zero on an empty track. Assets can also be dragged from the drawer onto any track; drop time is derived from pointer position and timeline scroll.
 - **Move clip:** drag the clip horizontally. Start is clamped to zero.
 - **Trim left:** adjusts timeline start and source offset together, preserving the selected source region's end. It cannot move before the source's beginning or leave less than 0.08 seconds.
 - **Trim right:** adjusts duration, keeping at least 0.08 seconds and never extending beyond the source asset.
