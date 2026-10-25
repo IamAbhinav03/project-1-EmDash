@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type
 import { Activity, AudioLines, FileAudio, FolderOpen, Import, SlidersHorizontal, X } from 'lucide-react'
 import type { Clip, SavedProject, Track } from './api'
 import { encodeWav } from './audio'
+import { splitAt, trimLeft, trimRight } from './clipEditing'
 import { TransportBar } from './components/TransportBar'
 import { InspectorPanel, type InspectorTab } from './components/InspectorPanel'
 import { TimelineEditor } from './components/TimelineEditor'
@@ -71,17 +72,15 @@ export default function App() {
     const element = event.currentTarget, before = cloneTracks(tracksRef.current), origin = event.clientX
     element.setPointerCapture(event.pointerId)
     if (side === 'left') {
-      const oldStart = clip.start, oldOffset = clip.offset, oldDuration = clip.duration
       const move = (moveEvent: PointerEvent) => {
         const delta = (moveEvent.clientX - origin) / pps
-        const newStart = Math.max(oldStart - oldOffset, Math.min(oldStart + delta, oldStart + oldDuration - 0.08))
-        patchClip(clip.id, item => ({ ...item, start: newStart, offset: Math.max(0, oldOffset + newStart - oldStart), duration: oldDuration - (newStart - oldStart) }))
+        patchClip(clip.id, () => trimLeft(clip, delta))
       }
       const end = () => { element.removeEventListener('pointermove', move); element.removeEventListener('pointerup', end); finishPointerEdit(before) }
       element.addEventListener('pointermove', move); element.addEventListener('pointerup', end)
     } else {
-      const oldDuration = clip.duration, assetDuration = assets.find(asset => asset.id === clip.assetId)?.buffer.duration ?? oldDuration + clip.offset
-      const move = (moveEvent: PointerEvent) => patchClip(clip.id, item => ({ ...item, duration: Math.max(0.08, Math.min(assetDuration - item.offset, oldDuration + (moveEvent.clientX - origin) / pps)) }))
+      const assetDuration = assets.find(asset => asset.id === clip.assetId)?.buffer.duration ?? clip.duration + clip.offset
+      const move = (moveEvent: PointerEvent) => patchClip(clip.id, () => trimRight(clip, (moveEvent.clientX - origin) / pps, assetDuration))
       const end = () => { element.removeEventListener('pointermove', move); element.removeEventListener('pointerup', end); finishPointerEdit(before) }
       element.addEventListener('pointermove', move); element.addEventListener('pointerup', end)
     }
@@ -141,11 +140,10 @@ export default function App() {
   }
   const splitClip = () => {
     if (!selectedClip) return
-    const { clip, track } = selectedClip, relative = position - clip.start
-    if (relative <= 0.03 || relative >= clip.duration - 0.03) { showToast('Place the playhead inside the selected clip'); return }
+    const { clip, track } = selectedClip, halves = splitAt(clip, position, newId())
+    if (!halves) { showToast('Place the playhead inside the selected clip'); return }
     const next = cloneTracks(tracksRef.current), target = next.find(item => item.id === track.id)!, index = target.clips.findIndex(item => item.id === clip.id)
-    const right = { ...target.clips[index], id: newId(), start: position, duration: clip.duration - relative, offset: clip.offset + relative, fadeIn: 0 }
-    target.clips[index].duration = relative; target.clips[index].fadeOut = 0; target.clips.push(right); commit(next); setSelected(right.id)
+    target.clips[index] = halves[0]; target.clips.push(halves[1]); commit(next); setSelected(halves[1].id)
   }
   const setFade = (kind: 'fadeIn' | 'fadeOut') => {
     if (!selectedClip) return
