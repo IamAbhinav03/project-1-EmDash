@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import mimetypes
 import re
+import os
+from pathlib import Path
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -13,9 +15,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+DATA_DIR = Path(os.environ.get("DATA_DIR", "/tmp/emdash-data"))
 PROJECTS_DIR = DATA_DIR / "projects"
 ASSETS_DIR = DATA_DIR / "assets"
+
 PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
