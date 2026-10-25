@@ -10,7 +10,6 @@ export async function POST(request) {
         maximumSizeInBytes: 250 * 1024 * 1024,
         addRandomSuffix: true,
       }),
-      onUploadCompleted: async () => {},
     })
     return Response.json(result)
   } catch (error) {
