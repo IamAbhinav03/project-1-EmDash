@@ -1,4 +1,6 @@
-# EmDash multi-track audio editor
+# project-1-EmDash
+
+EmDash multi-track audio editor
 
 The application is split into a React + Vite + Tailwind frontend and a Python FastAPI backend.
 
