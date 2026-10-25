@@ -47,4 +47,4 @@ Define the serializable field in the frontend model, make sure project save/open
 
 ## Current limitations to keep in mind
 
-Effects and automation panels are placeholders. The displayed BPM and 4/4 time signature are not connected to project state. There is no server-side audio processing, user authentication, cloud storage, project/asset deletion, or automatic cleanup of unused uploads. These should be treated as future work rather than existing behavior.
+The Effects panel is a placeholder. The displayed BPM and 4/4 time signature are not connected to project state. There is no server-side audio processing, user authentication, cloud storage, project/asset deletion, or automatic cleanup of unused uploads. These should be treated as future work rather than existing behavior.

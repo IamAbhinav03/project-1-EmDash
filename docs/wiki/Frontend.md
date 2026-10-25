@@ -7,7 +7,7 @@
 - `components/TransportBar.tsx` shows project title, playback controls, playhead time, save/open actions, and export. Double-click the title to edit it.
 - `components/TimelineEditor.tsx` renders the ruler, track headers, track controls, timeline clips, overview, zoom, and edit action buttons.
 - `components/Waveform.tsx` draws the selected source segment into a canvas.
-- `components/InspectorPanel.tsx` displays selected clip timing, track gain/pan/mute/solo and clip fade controls. Effects and Automation are explanatory placeholders.
+- `components/InspectorPanel.tsx` displays selected clip timing, track gain/pan/mute/solo and clip fade controls. Effects is an explanatory placeholder.
 - `hooks/useProjectManager.ts` encapsulates API-backed import, save, open, and project listing.
 - `hooks/useTrackHistory.ts` owns undo/redo snapshots.
 - `editorModel.ts` provides default tracks, IDs, clone helpers, and time formatting.

@@ -25,4 +25,4 @@ Browser UI (React)
 
 ## Current feature boundary
 
-Implemented: track and clip editing, file import, playback, per-track gain/pan/mute/solo, clip fades, split/trim/move, undo/redo, project save/open, and stereo 16-bit PCM WAV export. Effects and Automation views explain that their processing/lanes are not enabled. The displayed BPM and time signature are currently static UI values; loop state exists internally but has no user control and defaults off.
+Implemented: track and clip editing, file import, playback, per-track gain/pan/mute/solo, clip fades, split/trim/move, undo/redo, project save/open, and stereo 16-bit PCM WAV export. The Effects view explains that realtime processing is not enabled. The displayed BPM and time signature are currently static UI values; loop state exists internally but has no user control and defaults off.

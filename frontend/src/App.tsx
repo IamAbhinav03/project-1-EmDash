@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent } from 'react'
-import { Activity, AudioLines, FileAudio, FolderOpen, Import, SlidersHorizontal, X } from 'lucide-react'
+import { AudioLines, FileAudio, FolderOpen, Import, SlidersHorizontal, X } from 'lucide-react'
 import type { Clip, SavedProject, Track } from './api'
 import { encodeWav } from './audio'
 import { splitAt, trimLeft, trimRight } from './clipEditing'
@@ -241,7 +241,6 @@ export default function App() {
       <nav className="tool-rail" aria-label="Workspace tools">
         <button className="rail-tool active"><AudioLines size={18} /><span>TRACKS</span></button>
         <button className="rail-tool" onClick={() => setInspectorTab('Effects')}><SlidersHorizontal size={17} /><span>EFFECTS</span></button>
-        <button className="rail-tool" onClick={() => setInspectorTab('Automation')}><Activity size={17} /><span>AUTOMATION</span></button>
         <button className={`rail-tool ${mediaOpen ? 'active' : ''}`} onClick={() => setMediaOpen(value => !value)}><FileAudio size={17} /><span>MEDIA</span></button>
         <div className="rail-bottom"><i className="status-led" /><small>{saved ? 'SAVED' : 'UNSAVED'}</small><small>LOCAL SESSION</small></div>
       </nav>
