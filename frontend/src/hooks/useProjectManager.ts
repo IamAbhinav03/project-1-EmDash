@@ -1,9 +1,10 @@
-import { useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { API_BASE, api, type AssetMeta, type SavedProject, type Track } from '../api'
 import type { AudioAsset } from '../editorModel'
 
 type ProjectSummary = Pick<SavedProject, 'id' | 'name' | 'updatedAt'>
+type ImportProgress = { fileName: string; current: number; total: number; phase: 'uploading' | 'preparing' }
 
 type ProjectManagerOptions = {
   projectId: string
@@ -24,6 +25,8 @@ type ProjectManagerOptions = {
 }
 
 export function useProjectManager(options: ProjectManagerOptions) {
+  const [importProgress, setImportProgress] = useState<ImportProgress | null>(null)
+  const importing = useRef(false)
   const {
     projectId, projectName, tracksRef, assets, getAudioContext, showToast,
     setAssets, setProjectId, setProjectName, setTracks, setPosition, setSelected,
@@ -41,27 +44,33 @@ export function useProjectManager(options: ProjectManagerOptions) {
     // FileList is live and the input is reset after this handler runs. Copy it
     // before awaiting audio setup so clearing the input cannot empty the batch.
     const selectedFiles = Array.from(files)
-    if (!selectedFiles.length) return
-    let context: AudioContext
+    if (!selectedFiles.length || importing.current) return
+    importing.current = true
+    setImportProgress({ fileName: selectedFiles[0].name, current: 1, total: selectedFiles.length, phase: 'uploading' })
     try {
-      context = await getAudioContext()
+      const context = await getAudioContext()
+      const additions: AudioAsset[] = []
+      for (const [index, file] of selectedFiles.entries()) {
+        setImportProgress({ fileName: file.name, current: index + 1, total: selectedFiles.length, phase: 'uploading' })
+        try {
+          const meta = await api.uploadAsset(file)
+          setImportProgress({ fileName: file.name, current: index + 1, total: selectedFiles.length, phase: 'preparing' })
+          const asset = await loadAsset(meta, context)
+          additions.push(asset)
+          setAssets(current => [...current, asset])
+        } catch (error) {
+          showToast(error instanceof Error ? error.message : `Could not import ${file.name}`)
+        }
+      }
+      if (additions.length) {
+        showToast(additions.length === 1 ? 'Audio added to media library' : `${additions.length} audio files added to media library`)
+      }
     } catch (error) {
       showToast(error instanceof Error ? `Could not initialize audio: ${error.message}` : 'Could not initialize audio')
-      return
+    } finally {
+      importing.current = false
+      setImportProgress(null)
     }
-    const additions: AudioAsset[] = []
-    for (const file of selectedFiles) {
-      try {
-        const meta = await api.uploadAsset(file)
-        additions.push(await loadAsset(meta, context))
-      } catch (error) {
-        showToast(error instanceof Error ? error.message : `Could not import ${file.name}`)
-      }
-    }
-    if (!additions.length) return
-
-    setAssets(current => [...current, ...additions])
-    showToast(additions.length === 1 ? 'Audio added to media library' : `${additions.length} audio files added to media library`)
   }, [getAudioContext, loadAsset, setAssets, showToast])
 
   const saveProject = useCallback(async () => {
@@ -101,5 +110,5 @@ export function useProjectManager(options: ProjectManagerOptions) {
     }
   }, [setProjectList, showToast])
 
-  return { importFiles, saveProject, openProject, showProjects }
+  return { importFiles, importProgress, saveProject, openProject, showProjects }
 }

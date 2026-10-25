@@ -49,7 +49,7 @@ export default function App() {
     if (audioContext.current.state === 'suspended') await audioContext.current.resume()
     return audioContext.current
   }, [])
-  const { importFiles, saveProject, openProject, showProjects } = useProjectManager({
+  const { importFiles, importProgress, saveProject, openProject, showProjects } = useProjectManager({
     projectId, projectName, tracksRef, assets, getAudioContext, showToast,
     setAssets, setProjectId, setProjectName, setTracks, setPosition, setSelected,
     setProjectList, setSaved, resetHistory,
@@ -245,7 +245,7 @@ export default function App() {
         <button className={`rail-tool ${mediaOpen ? 'active' : ''}`} onClick={() => setMediaOpen(value => !value)}><FileAudio size={17} /><span>MEDIA</span></button>
         <div className="rail-bottom"><i className="status-led" /><small>{saved ? 'SAVED' : 'UNSAVED'}</small><small>LOCAL SESSION</small></div>
       </nav>
-      {mediaOpen && <aside className="media-drawer"><div className="drawer-title"><span>MEDIA LIBRARY</span><button className="icon-button" onClick={() => setMediaOpen(false)}><X size={15} /></button></div><label className="import-button"><Import size={15} /> Import audio<input type="file" accept="audio/*" multiple hidden onChange={event => { const files = Array.from(event.target.files ?? []); event.target.value = ''; if (files.length) void importFiles(files) }} /></label>{assets.map(asset => <div key={asset.id} className="library-item" draggable onDragStart={event => event.dataTransfer.setData('asset', asset.id)}><FileAudio size={15} /><span className="file-name">{asset.name}</span></div>)}</aside>}
+      {mediaOpen && <aside className="media-drawer"><div className="drawer-title"><span>MEDIA LIBRARY</span><button className="icon-button" onClick={() => setMediaOpen(false)}><X size={15} /></button></div><label className={`import-button ${importProgress ? 'is-busy' : ''}`}><Import size={15} /> {importProgress ? 'Importing audio…' : 'Import audio'}<input type="file" accept="audio/*" multiple hidden disabled={Boolean(importProgress)} onChange={event => { const files = Array.from(event.target.files ?? []); event.target.value = ''; if (files.length) void importFiles(files) }} /></label>{assets.map(asset => <div key={asset.id} className="library-item" draggable onDragStart={event => event.dataTransfer.setData('asset', asset.id)}><FileAudio size={15} /><span className="file-name">{asset.name}</span></div>)}</aside>}
       <TimelineEditor
         tracks={tracks}
         assets={assets}
@@ -290,6 +290,7 @@ export default function App() {
         onRemoveClip={removeClip}
       />
     </section>
+    {importProgress && <div className="upload-status" role="status" aria-live="polite"><div className="upload-spinner" aria-hidden="true" /><div className="upload-status-copy"><strong>{importProgress.phase === 'uploading' ? 'Uploading audio' : 'Preparing waveform'}</strong><span title={importProgress.fileName}>{importProgress.fileName}</span><small>File {importProgress.current} of {importProgress.total}</small></div></div>}
     {toast && <div className="toast">{toast}</div>}
     {projectList && <div className="modal-backdrop" onClick={() => setProjectList(null)}><div className="modal" onClick={event => event.stopPropagation()}><button className="modal-close" onClick={() => setProjectList(null)}><X size={18} /></button><FolderOpen size={20} /><h2>Open a saved session</h2><p>Your projects are stored by the EmDash backend.</p>{projectList.length ? projectList.map(project => <div className="saved-project" key={project.id}><span>{project.name}<small>{new Date(project.updatedAt).toLocaleString()}</small></span><button onClick={() => void openProject(project.id)}>Open project</button></div>) : <div className="no-saved">No saved sessions yet.</div>}</div></div>}
     {busyExport && <div className="modal-backdrop"><div className="modal export-modal"><div className="spinner" /><h2>Rendering your mix</h2><p>This can take a moment for longer sessions.</p></div></div>}
