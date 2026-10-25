@@ -9,7 +9,7 @@ export type SavedProject = {
 }
 export type AssetMeta = { id: string; name: string; url: string; contentType: string; size?: number; duration?: number }
 export type Clip = { id: string; assetId: string; start: number; duration: number; offset: number; fadeIn: number; fadeOut: number }
-export type Track = { id: string; name: string; color: string; volume: number; mute: boolean; solo: boolean; clips: Clip[] }
+export type Track = { id: string; name: string; color: string; volume: number; pan?: number; mute: boolean; solo: boolean; clips: Clip[] }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}/api${path}`, init)
