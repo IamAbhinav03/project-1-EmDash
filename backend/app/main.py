@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import mimetypes
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -16,7 +17,8 @@ from pydantic import BaseModel, Field
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 ASSETS_DIR = DATA_DIR / "assets"
-ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+if not os.getenv("VERCEL"):
+    ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="EmDash Audio Editor API", version="1.0.0")
 app.add_middleware(
@@ -79,6 +81,8 @@ def save_project(project_id: str, payload: ProjectPayload) -> dict[str, Any]:
 
 @app.post("/api/assets", status_code=201)
 async def upload_asset(file: UploadFile = File(...)) -> dict[str, Any]:
+    if os.getenv("VERCEL"):
+        raise HTTPException(status_code=501, detail="Upload audio through the media library's Blob uploader")
     suffix = Path(file.filename or "audio").suffix.lower()
     content_type = file.content_type or mimetypes.guess_type(file.filename or "")[0] or "application/octet-stream"
     if not content_type.startswith("audio/") and suffix not in {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".aac", ".webm"}:
