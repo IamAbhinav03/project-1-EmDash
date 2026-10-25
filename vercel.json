@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "cd frontend && npm ci && npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    {"source": "/api/blob-upload", "destination": "/api/blob-upload"},
+    {"source": "/api/:path*", "destination": "/api/index"},
+    {"source": "/:path*", "destination": "/index.html"}
+  ]
+}

@@ -1,40 +1,25 @@
-# FastAPI backend
+# FastAPI backend and storage
 
-## Application and storage
+`backend/app/main.py` defines the API. `backend/app/database.py` connects to PostgreSQL through `DATABASE_URL` and creates the `projects` table when a connection is opened. Project names and timestamps are columns; tracks and asset metadata are JSONB columns. IDs are validated before queries, and SQL parameters are bound through psycopg.
 
-The API is defined in `backend/app/main.py` and is launched from the repository root with:
-
-```sh
-uvicorn app.main:app --app-dir backend --reload --port 8000
-```
-
-On import, the module creates `backend/data/projects/` and `backend/data/assets/` if needed. Both are runtime data directories and are gitignored. Project records are JSON files named `{project_id}.json`; uploads are files named with a generated 32-character lowercase UUID and their original extension (or `.audio` when no extension exists). The backend does not keep a database or process audio.
-
-## HTTP API
+Local audio uploads are stored under gitignored `backend/data/assets/`. The Vercel build uses direct browser uploads to Vercel Blob, so large audio does not pass through a Function. Project records hold each asset URL and metadata; decoded AudioBuffers remain in the browser only.
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `GET` | `/api/health` | Returns service status. |
-| `GET` | `/api/projects` | Reads valid project JSON files and returns `{id, name, updatedAt}` summaries, newest first. Invalid/unreadable records are skipped. |
-| `GET` | `/api/projects/{project_id}` | Returns the complete project JSON or `404`. |
-| `PUT` | `/api/projects/{project_id}` | Validates and writes project name, tracks, and assets; sets `updatedAt` in UTC. Creates/overwrites that project file. |
-| `POST` | `/api/assets` | Accepts multipart field `file`, validates an audio type/extension, streams it to disk, returns asset metadata. Success is `201`. |
-| `GET` | `/api/assets/{asset_id}` | Serves the matching stored asset file or returns `404`. |
+| `GET` | `/api/health` | Checks database connectivity. |
+| `GET` | `/api/projects` | Lists projects, newest first. |
+| `GET` | `/api/projects/{id}` | Returns a project or `404`. |
+| `PUT` | `/api/projects/{id}` | Inserts or updates a project and timestamp. |
+| `POST` | `/api/assets` | Local multipart audio upload, up to 250 MiB. |
+| `GET` | `/api/assets/{id}` | Serves a local stored asset. |
+| `POST` | `/api/blob-upload` | Vercel upload token endpoint for direct Blob uploads. |
 
-FastAPI's interactive API documentation is available at `/docs` while the server is running.
+The project name must have 1–120 characters; IDs allow 1–80 letters, digits, underscores, or hyphens. Uploaded file types are checked by MIME or suffix. FastAPI's interactive docs are at `/docs` during local development.
 
-## Validation and errors
+## Existing project migration
 
-`ProjectPayload` requires a name from 1 to 120 characters. `tracks` and `assets` are arrays of JSON objects and default to empty arrays. Project IDs must match 1–80 letters, digits, underscores, or hyphens. Asset IDs must be 32 lowercase hexadecimal characters.
+Run `DATABASE_URL=... PYTHONPATH=backend python3 backend/scripts/migrate_json_projects.py`. This imports each legacy `backend/data/projects/*.json` record once and leaves the JSON files untouched as backups. Existing local audio files remain on the local machine; moving those projects to a hosted database does not upload their audio to Blob.
 
-Uploads are accepted when the MIME type begins with `audio/` or the filename suffix is one of `.wav`, `.mp3`, `.m4a`, `.ogg`, `.flac`, `.aac`, `.webm`. Files larger than 250 MiB are rejected with `413`; unsupported files receive `415`. Upload is read in 1 MiB chunks and partial over-limit files are removed.
+## Deployment
 
-The frontend's API wrapper surfaces FastAPI's JSON `detail` value when available. Common statuses include `400` for malformed IDs, `404` for missing project/asset, `413` for size limit, `415` for unsupported upload, and `422` for request validation.
-
-## CORS and local development
-
-CORS allows localhost and 127.0.0.1 on ports 5173 and 4173. Vite proxies `/api` to the backend during development, so the browser generally talks to the frontend origin and the proxy forwards requests.
-
-## Operational boundaries
-
-This is a local-file persistence backend, not a multi-user production service. There is no authentication, database, project delete route, asset delete route, upload quota, or orphan cleanup. Asset names are returned as metadata; disk names are generated IDs. The project JSON stores references to assets but does not package or duplicate the audio bytes.
+The Vercel project needs a PostgreSQL `DATABASE_URL` and a connected Vercel Blob store. The repository's `api/index.py` exposes FastAPI; `api/blob-upload.js` signs direct uploads. Vercel builds the Vite frontend from `frontend/` and rewrites `/api/*` to the functions. No authentication or user separation is implemented, so do not place private projects or audio in a publicly accessible deployment.

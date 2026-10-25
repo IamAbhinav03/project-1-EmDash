@@ -12,15 +12,15 @@ This wiki describes how the current repository works, how the frontend and backe
 
 ## At a glance
 
-EmDash is a browser-based multitrack audio editor. The React/Vite frontend owns editing state, decodes audio through the Web Audio API, schedules playback, and renders WAV exports. FastAPI accepts audio uploads and stores project JSON and asset files on disk. Vite proxies `/api` requests to the local API while developing.
+EmDash is a browser-based multitrack audio editor. The React/Vite frontend owns editing state, decodes audio through the Web Audio API, schedules playback, and renders WAV exports. FastAPI stores project records in PostgreSQL. Local audio uploads use disk storage; Vercel deployments upload directly to Vercel Blob. Vite proxies `/api` requests to the local API while developing.
 
 ```text
 Browser UI (React)
   ├─ editor state, timeline interactions, history
   ├─ Web Audio API: decode, playback, offline render
   └─ HTTP /api ── Vite proxy in development ── FastAPI
-                                             ├─ data/projects/*.json
-                                             └─ data/assets/*
+                                             ├─ PostgreSQL projects
+                                             └─ local data/assets/*
 ```
 
 ## Current feature boundary

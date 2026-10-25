@@ -31,6 +31,6 @@ Long renders can consume significant memory because the output buffer is held in
 
 ## Save and reopen
 
-The project manager removes `buffer` from each asset before sending project data to the backend. The saved representation contains metadata and track/clip parameters, not the audio bytes or decoded samples. Audio bytes live separately as files in `backend/data/assets/`.
+The project manager removes `buffer` from each asset before sending project data to the backend. The saved representation contains metadata and track/clip parameters, not the audio bytes or decoded samples. Audio bytes live separately in local `backend/data/assets/` or Vercel Blob.
 
-Opening a project first reads its JSON, then downloads and decodes each asset URL. If an asset file has been removed, opening cannot reconstruct that source and the UI reports an error. Runtime state is marked saved after a successful open. Imported files are stored by the backend even before a project is saved; no asset deletion/garbage-collection endpoint currently exists.
+Opening a project first reads its JSON, then downloads and decodes each asset URL. If an asset file has been removed, opening cannot reconstruct that source and the UI reports an error. Runtime state is marked saved after a successful open. Imported files can be stored before a project is saved; no asset deletion or cleanup endpoint currently exists.

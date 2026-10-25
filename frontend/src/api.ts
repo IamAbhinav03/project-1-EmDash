@@ -25,7 +25,12 @@ export const api = {
   getProject: (id: string) => request<SavedProject>(`/projects/${id}`),
   saveProject: (id: string, project: Pick<SavedProject, 'name' | 'tracks' | 'assets'>) => request(`/projects/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(project) }),
   uploadAsset: async (file: File) => {
+    if (import.meta.env.PROD) {
+      const blob = await upload(file.name, file, { access: 'public', handleUploadUrl: '/api/blob-upload' })
+      return { id: crypto.randomUUID(), name: file.name, url: blob.url, contentType: file.type || 'audio/mpeg', size: file.size }
+    }
     const body = new FormData(); body.append('file', file)
     return request<AssetMeta>('/assets', { method: 'POST', body })
   },
 }
+import { upload } from '@vercel/blob/client'

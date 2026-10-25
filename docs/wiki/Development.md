@@ -12,7 +12,7 @@ From the repository root, install backend dependencies and start FastAPI:
 
 ```sh
 python3 -m pip install -r backend/requirements.txt
-uvicorn app.main:app --app-dir backend --reload --port 8000
+DATABASE_URL=postgresql://localhost/audio_editor uvicorn app.main:app --app-dir backend --reload --port 8000
 ```
 
 In a second terminal, install frontend dependencies and start Vite:
@@ -27,7 +27,7 @@ Open `http://localhost:5173`. Vite forwards `/api` requests to the API on port 8
 
 ## Configuration and runtime data
 
-`VITE_API_URL` optionally sets the API origin for frontend requests. When unset, requests use relative `/api`, which works with the Vite proxy. Backend data is written under `backend/data/`; that folder is gitignored, so project and uploaded asset files are local runtime state rather than source files.
+`VITE_API_URL` optionally sets the API origin for frontend requests. When unset, requests use relative `/api`, which works with the Vite proxy. Project records live in PostgreSQL. Local uploaded audio lives under gitignored `backend/data/assets/`. Set `DATABASE_URL` before starting FastAPI.
 
 ## Where common changes belong
 
@@ -43,7 +43,7 @@ Open `http://localhost:5173`. Vite forwards `/api` requests to the API on port 8
 
 ## Adding persistent project data
 
-Define the serializable field in the frontend model, make sure project save/open preserves it, and ensure FastAPI's payload accepts and returns it. The current backend stores tracks and assets as generic JSON object arrays, so it preserves fields without a detailed nested schema. Keep decoded `AudioBuffer`s and other browser objects out of serialized data.
+Define the serializable field in the frontend model, make sure project save/open preserves it, and ensure FastAPI's payload accepts and returns it. The current backend stores tracks and assets as JSONB arrays, so it preserves fields without a detailed nested schema. Keep decoded `AudioBuffer`s and other browser objects out of serialized data.
 
 ## Current limitations to keep in mind
 
