@@ -39,9 +39,19 @@ export function useProjectManager(options: ProjectManagerOptions) {
   }, [getAudioContext])
 
   const importFiles = useCallback(async (files: FileList | File[]) => {
-    const context = await getAudioContext()
+    // FileList is live and the input is reset after this handler runs. Copy it
+    // before awaiting audio setup so clearing the input cannot empty the batch.
+    const selectedFiles = Array.from(files)
+    if (!selectedFiles.length) return
+    let context: AudioContext
+    try {
+      context = await getAudioContext()
+    } catch (error) {
+      showToast(error instanceof Error ? `Could not initialize audio: ${error.message}` : 'Could not initialize audio')
+      return
+    }
     const additions: AudioAsset[] = []
-    for (const file of Array.from(files)) {
+    for (const file of selectedFiles) {
       try {
         const meta = await api.uploadAsset(file)
         additions.push(await loadAsset(meta, context))
