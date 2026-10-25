@@ -4,6 +4,10 @@ EmDash multi-track audio editor
 
 The application is split into a React + Vite + Tailwind frontend and a Python FastAPI backend.
 
+## Documentation
+
+See the [EmDash repository wiki](docs/wiki/Home.md) for an architecture overview, frontend and audio walkthroughs, backend API and persistence details, and development notes.
+
 ## Run locally
 
 Start the API in one terminal:
