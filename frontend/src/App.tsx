@@ -268,6 +268,8 @@ export default function App() {
         onTrimClip={trimClip}
         onZoomChange={setZoom}
         onSetFade={setFade}
+        onSplitClip={splitClip}
+        onRemoveClip={removeClip}
         onUndo={undo}
         onRedo={redo}
       />

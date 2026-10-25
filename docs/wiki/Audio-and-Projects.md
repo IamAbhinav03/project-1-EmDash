@@ -20,7 +20,8 @@ Thus a clip plays source audio `[offset, offset + duration)` at project time `[s
 
 For each audible clip, `App.schedule` creates an `AudioBufferSourceNode`, `GainNode`, and `StereoPannerNode`, connected in that order to the AudioContext destination. It schedules clips relative to the current playhead and current AudioContext time. It skips clips ending before the playhead and offsets the source start for clips already in progress. Track mute and solo determine which tracks are scheduled. Per-clip fades are represented by scheduled gain automation.
 
-The playhead UI is advanced with `requestAnimationFrame` using AudioContext time as the clock. Pause records the calculated current position and suspends the context. Seeking clamps to the project extent and restarts playback if playback was active. At the end of the timeline playback stops. The code contains a loop branch, but the loop flag initializes false and there is no current UI toggle to turn it on.
+The playhead UI is advanced with `requestAnimationFrame` using AudioContext time as the clock. Pause records the calculated current position and stops the scheduled sources. Seeking clamps to the project extent and restarts playback if playback was active. At the end of the timeline playback stops. The code contains a loop branch, but the loop flag initializes false and there is no current UI toggle to turn it on.
+Scheduled source nodes are tracked and stopped when playback stops, the playhead seeks, or track content changes. Editing during playback therefore stops the current pass; press Play to hear the edited arrangement.
 
 ## Export
 

@@ -26,11 +26,11 @@ The timeline width is based on the furthest clip end and zoom (pixels per second
 - **Rename track:** edits the name inline and marks the project unsaved.
 - **Import:** selecting one or more audio files uploads and decodes them into the Media drawer. Each track has a file selector to add a chosen asset; the new clip starts after that track's last clip, or at zero on an empty track. Assets can also be dragged from the drawer onto any track; drop time is derived from pointer position and timeline scroll.
 - **Move clip:** drag the clip horizontally. Start is clamped to zero.
-- **Trim left:** adjusts timeline start and source offset together, preserving the selected source region's end. It cannot move before the source's beginning or leave less than 0.08 seconds.
-- **Trim right:** adjusts duration, keeping at least 0.08 seconds and never extending beyond the source asset.
-- **Split:** splits the selected clip at the playhead, if each resulting side is at least 0.03 seconds. The right clip advances its source offset; the split-facing fades are reset.
+- **Trim left:** drag the orange left edge of a clip. This adjusts timeline start and source offset together, preserving the selected source region's end. It cannot move before timeline or source time zero or leave less than 0.08 seconds.
+- **Trim right:** drag the orange right edge to adjust duration, keeping at least 0.08 seconds and never extending beyond the source asset.
+- **Split:** select a clip, move the playhead inside it, then choose **Split at playhead** in the Inspector or **Split** in the bottom toolbar. Each resulting side must be at least 0.03 seconds. The right clip advances its source offset; the split-facing fades are reset.
 - **Fades:** prompts for fade duration in seconds, bounded to the clip duration. Fades are non-destructive gain ramps.
-- **Remove:** removes the selected clip. Track deletion removes that track and its clips.
+- **Remove:** select a clip and choose **Delete clip** in the Inspector or **Delete** in the bottom toolbar. The `Delete` key also removes it. Track deletion removes that track and its clips.
 - **Track controls:** mute, solo, volume, and pan are used during playback and export.
 
 Undo/redo applies to track data. The history hook keeps up to 40 past snapshots; making a new committed edit clears the redo stack. Project open resets history.
